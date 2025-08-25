@@ -100,7 +100,10 @@ async function translate(text, from, to, options) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: requestBody
+            body: {
+                type: 'Json',
+                payload: requestBody
+            }
         });
 
         if (!res.ok) {
