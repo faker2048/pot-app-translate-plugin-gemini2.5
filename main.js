@@ -91,7 +91,7 @@ async function translate(text, from, to, options) {
         }
     };
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${actualModel}:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${actualModel}:streamGenerateContent?key=${apiKey}`;
 
     try {
         const res = await fetch(url, {
