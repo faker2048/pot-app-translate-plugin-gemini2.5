@@ -1,10 +1,16 @@
 {
-  "id": "plugin.com.pot-app.lingva",
+  "id": "plugin.com.pot-app.gemini",
   "plugin_type": "translate",
-  "icon": "lingva.svg",
-  "display": "Lingva",
-  "homepage": "https://github.com/pot-app/pot-app-translate-plugin-template",
-  "needs": [{ "key": "requestPath", "display": "请求地址" }],
+  "icon": "gemini.svg",
+  "display": "Gemini 2.5",
+  "homepage": "https://github.com/pot-app/pot-app-translate-plugin-gemini",
+  "needs": [
+    { "key": "apiKey", "display": "API Key" },
+    { "key": "model", "display": "模型", "default": "gemini-2.5-flash-lite" },
+    { "key": "enableThinking", "display": "启用思考模式", "type": "select", "options": [{"value": "true", "label": "启用"}, {"value": "false", "label": "禁用"}], "default": "false" },
+    { "key": "temperature", "display": "温度 (0-1)", "default": "0.3" },
+    { "key": "maxOutputTokens", "display": "最大输出 token 数", "default": "1024" }
+  ],
   "language": {
     "auto": "auto",
     "zh_cn": "zh",
