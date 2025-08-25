@@ -89,8 +89,10 @@ async function translate(text, from, to, options) {
                     "type": "object",
                     "properties": {
                         "translation": {
-                            "type": "string",
-                            "description": "The translated text"
+                            "type": "string"
+                        },
+                        "concise summary": {
+                            "type": "string"
                         }
                     },
                     "required": ["translation"]
@@ -142,9 +144,13 @@ async function translate(text, from, to, options) {
                     `自然表达: ${parsedResponse['more natural expression'] || 'N/A'}`,
                     `Reddit谦逊表达: ${parsedResponse['reddit humble expression'] || 'N/A'}`
                 ];
-                return expressions.join('\n');
+                return expressions.join('\n\n');
             } else {
-                return parsedResponse.translation || responseText;
+                const expressions = [
+                    `${parsedResponse.translation || 'N/A'}`,
+                    `简洁总结: ${parsedResponse['concise summary'] || 'N/A'}`
+                ];
+                return expressions.join('\n\n');
             }
         } catch (parseError) {
             return responseText;
