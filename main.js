@@ -1,53 +1,37 @@
 async function translate(text, from, to, options) {
+    let config, fetch;
+    
     try {
-        const { config, utils } = options;
-        const { tauriFetch: fetch } = utils;
+        const { config: cfg, utils } = options;
+        const { tauriFetch } = utils;
+        config = cfg;
+        fetch = tauriFetch;
     } catch (error) {
         throw `[错误位置: 解构options] ${error.toString()}`;
     }
 
-    let actualModel, actualEnableThinking, actualTemperature, actualMaxOutputTokens;
+    let apiKey, actualModel, actualEnableThinking, actualTemperature, actualMaxOutputTokens;
     
     try {
-        // Get configuration values with proper defaults
-        const {
-            apiKey,
-            model,
-            enableThinking,
-            temperature,
-            maxOutputTokens
-        } = config;
+        apiKey = config.apiKey;
+        actualModel = config.model || "gemini-2.5-flash-lite";
+        actualEnableThinking = config.enableThinking || "false";
+        actualTemperature = config.temperature || "0.3";
+        actualMaxOutputTokens = config.maxOutputTokens || "1024";
         
-        actualModel = model || "gemini-2.5-flash-lite";
-        actualEnableThinking = enableThinking || "false";
-        actualTemperature = temperature || "0.3";
-        actualMaxOutputTokens = maxOutputTokens || "1024";
-        
-        // 调试信息
-        console.log("Config object:", JSON.stringify(config, null, 2));
-        console.log("API Key value:", apiKey);
-        console.log("API Key type:", typeof apiKey);
-        console.log("API Key length:", apiKey ? apiKey.length : 'undefined');
-        
-    } catch (error) {
-        throw `[错误位置: 处理配置参数] config对象: ${JSON.stringify(config)} - ${error.toString()}`;
-    }
-
-    try {
         if (!apiKey || apiKey.trim() === '') {
-            throw `API Key is required. 当前值: "${apiKey}", 类型: ${typeof apiKey}`;
+            throw `API Key is required. 当前配置: ${JSON.stringify(config)}`;
         }
     } catch (error) {
-        throw `[错误位置: 检查API Key] ${error.toString()}`;
+        throw `[错误位置: 处理配置参数] ${error.toString()}`;
     }
 
     let fromLang, toLang;
     try {
-        // Convert language codes to full names for better translation
         const getLanguageName = (code) => {
             const langMap = {
                 'en': 'English',
-                'zh': 'Chinese',
+                'zh': 'Chinese', 
                 'zh_cn': 'Chinese Simplified',
                 'zh_tw': 'Chinese Traditional',
                 'ja': 'Japanese',
@@ -74,16 +58,10 @@ async function translate(text, from, to, options) {
         throw `[错误位置: 处理语言代码] ${error.toString()}`;
     }
 
-    let thinkingBudget;
+    let requestBody, url;
     try {
-        // Set thinkingBudget based on enableThinking option
-        thinkingBudget = actualEnableThinking === "true" ? -1 : 0;
-    } catch (error) {
-        throw `[错误位置: 设置思考预算] ${error.toString()}`;
-    }
-
-    let requestBody;
-    try {
+        const thinkingBudget = actualEnableThinking === "true" ? -1 : 0;
+        
         requestBody = {
             "contents": [{
                 "role": "user",
@@ -101,24 +79,12 @@ async function translate(text, from, to, options) {
                 "responseSchema": {
                     "type": "object",
                     "properties": {
-                        "concise expression": {
-                            "type": "string"
-                        },
-                        "more natural expression": {
-                            "type": "string"
-                        },
-                        "direct translation": {
-                            "type": "string"
-                        },
-                        "reddit humble expression": {
-                            "type": "string"
+                        "translation": {
+                            "type": "string",
+                            "description": "The translated text"
                         }
                     },
-                    "required": [
-                        "more natural expression",
-                        "direct translation",
-                        "reddit humble expression"
-                    ]
+                    "required": ["translation"]
                 }
             }
         };
@@ -126,137 +92,49 @@ async function translate(text, from, to, options) {
         throw `[错误位置: 构建请求体] ${error.toString()}`;
     }
 
-    let url;
-    try {
-        url = `https://generativelanguage.googleapis.com/v1beta/models/${actualModel}:streamGenerateContent?key=${apiKey}`;
-    } catch (error) {
-        throw `[错误位置: 构建URL] ${error.toString()}`;
-    }
+    url = `https://generativelanguage.googleapis.com/v1beta/models/${actualModel}:streamGenerateContent?key=${apiKey}`;
 
-    let res;
     try {
-        res = await fetch(url, {
+        const res = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: requestBody
         });
-    } catch (error) {
-        throw `[错误位置: 发送API请求] ${error.toString()}`;
-    }
 
-    try {
         if (!res.ok) {
             let errorDetail = `HTTP ${res.status} - ${res.statusText}`;
             if (res.data) {
-                try {
-                    errorDetail += `\nResponse: ${JSON.stringify(res.data, null, 2)}`;
-                } catch (e) {
-                    errorDetail += `\nResponse: ${res.data}`;
-                }
+                errorDetail += `\nResponse: ${JSON.stringify(res.data)}`;
             }
-            throw `API请求失败: ${errorDetail}`;
+            throw new Error(`API请求失败: ${errorDetail}`);
         }
-    } catch (error) {
-        throw `[错误位置: 检查HTTP响应状态] ${error.toString()}`;
-    }
 
-    let result;
-    try {
-        result = res.data;
-        if (!result) {
-            throw "API返回空响应";
+        const result = res.data;
+        
+        if (!result || !result.candidates || result.candidates.length === 0) {
+            throw new Error(`API响应异常: ${JSON.stringify(result)}`);
         }
-    } catch (error) {
-        throw `[错误位置: 获取响应数据] ${error.toString()}`;
-    }
 
-    try {
-        if (!result.candidates) {
-            throw `API响应格式错误: 缺少candidates字段\n完整响应: ${JSON.stringify(result, null, 2)}`;
+        const candidate = result.candidates[0];
+        if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+            throw new Error(`响应格式异常: ${JSON.stringify(candidate)}`);
         }
-    } catch (error) {
-        throw `[错误位置: 检查candidates字段] ${error.toString()}`;
-    }
 
-    try {
-        if (result.candidates.length === 0) {
-            let errorMsg = "API未返回翻译候选";
-            if (result.promptFeedback) {
-                errorMsg += `\n提示反馈: ${JSON.stringify(result.promptFeedback, null, 2)}`;
-            }
-            if (result.usageMetadata) {
-                errorMsg += `\n使用统计: ${JSON.stringify(result.usageMetadata, null, 2)}`;
-            }
-            throw errorMsg;
-        }
-    } catch (error) {
-        throw `[错误位置: 检查candidates数量] ${error.toString()}`;
-    }
-
-    let candidate;
-    try {
-        candidate = result.candidates[0];
-    } catch (error) {
-        throw `[错误位置: 获取第一个候选项] ${error.toString()}`;
-    }
-
-    try {
-        if (candidate.finishReason && candidate.finishReason !== 'STOP') {
-            throw `翻译被中断: ${candidate.finishReason}\n候选项: ${JSON.stringify(candidate, null, 2)}`;
-        }
-    } catch (error) {
-        throw `[错误位置: 检查完成原因] ${error.toString()}`;
-    }
-
-    try {
-        if (!candidate.content) {
-            throw `候选项缺少content字段\n候选项: ${JSON.stringify(candidate, null, 2)}`;
-        }
-    } catch (error) {
-        throw `[错误位置: 检查候选项content] ${error.toString()}`;
-    }
-
-    try {
-        if (!candidate.content.parts || candidate.content.parts.length === 0) {
-            throw `候选项content缺少parts字段\n候选项content: ${JSON.stringify(candidate.content, null, 2)}`;
-        }
-    } catch (error) {
-        throw `[错误位置: 检查content.parts] ${error.toString()}`;
-    }
-
-    let responseText;
-    try {
-        responseText = candidate.content.parts[0].text;
+        const responseText = candidate.content.parts[0].text;
         if (!responseText) {
-            throw `响应文本为空\n完整part: ${JSON.stringify(candidate.content.parts[0], null, 2)}`;
+            throw new Error(`响应文本为空: ${JSON.stringify(candidate.content.parts[0])}`);
         }
-    } catch (error) {
-        throw `[错误位置: 获取响应文本] ${error.toString()}`;
-    }
 
-    try {
-        const parsedResponse = JSON.parse(responseText);
-        
-        // 尝试不同的字段名
-        const translation = parsedResponse.translation || 
-                         parsedResponse["direct translation"] || 
-                         parsedResponse["more natural expression"] || 
-                         parsedResponse["reddit humble expression"] ||
-                         parsedResponse["concise expression"];
-        
-        if (translation) {
-            return translation;
-        } else {
-            return responseText;
-        }
-    } catch (parseError) {
         try {
-            // If JSON parsing fails, return the raw text
+            const parsedResponse = JSON.parse(responseText);
+            return parsedResponse.translation || responseText;
+        } catch (parseError) {
             return responseText;
-        } catch (error) {
-            throw `[错误位置: 处理JSON解析失败后返回原始文本] ${error.toString()}`;
         }
+
+    } catch (error) {
+        throw `[错误位置: API调用和响应处理] ${error.toString()}`;
     }
 }
