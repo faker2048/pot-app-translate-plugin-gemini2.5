@@ -97,19 +97,19 @@ async function translate(text, from, to, options) {
     try {
         const res = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody), // 这里要 stringify
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)  // 等价于 curl -d @request.json
         });
 
         if (!res.ok) {
-            let errorDetail = `HTTP ${res.status} - ${res.statusText}`;
-            if (res.data) {
-                errorDetail += `\nResponse: ${JSON.stringify(res.data)}`;
-            }
-            throw new Error(`API请求失败: ${errorDetail}`);
+            const text = await res.text();
+            throw new Error(`HTTP ${res.status} - ${res.statusText}\n${text}`);
         }
 
-        const result = await res.json();
+        const result = await res.json();  // 等价于 curl 返回的 JSON
+
 
         if (!result || !result.candidates || result.candidates.length === 0) {
             throw new Error(`API响应异常: ${JSON.stringify(result)}`);
