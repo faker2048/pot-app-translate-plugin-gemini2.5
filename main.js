@@ -6,30 +6,36 @@ async function translate(text, from, to, options) {
         throw `[错误位置: 解构options] ${error.toString()}`;
     }
 
-    let actualModel, actualEnableThinking, actualTemperature, actualMaxOutputTokens, apiKey;
+    let actualModel, actualEnableThinking, actualTemperature, actualMaxOutputTokens;
     
     try {
         // Get configuration values with proper defaults
         const {
-            apiKey: configApiKey,
+            apiKey,
             model,
             enableThinking,
             temperature,
             maxOutputTokens
         } = config;
         
-        apiKey = configApiKey;
         actualModel = model || "gemini-2.5-flash-lite";
         actualEnableThinking = enableThinking || "false";
         actualTemperature = temperature || "0.3";
         actualMaxOutputTokens = maxOutputTokens || "1024";
+        
+        // 调试信息
+        console.log("Config object:", JSON.stringify(config, null, 2));
+        console.log("API Key value:", apiKey);
+        console.log("API Key type:", typeof apiKey);
+        console.log("API Key length:", apiKey ? apiKey.length : 'undefined');
+        
     } catch (error) {
-        throw `[错误位置: 处理配置参数] ${error.toString()}`;
+        throw `[错误位置: 处理配置参数] config对象: ${JSON.stringify(config)} - ${error.toString()}`;
     }
 
     try {
-        if (!apiKey) {
-            throw "API Key is required";
+        if (!apiKey || apiKey.trim() === '') {
+            throw `API Key is required. 当前值: "${apiKey}", 类型: ${typeof apiKey}`;
         }
     } catch (error) {
         throw `[错误位置: 检查API Key] ${error.toString()}`;
