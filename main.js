@@ -92,7 +92,7 @@ async function translate(text, from, to, options) {
         throw `[错误位置: 构建请求体] ${error.toString()}`;
     }
 
-    url = `https://generativelanguage.googleapis.com/v1beta/models/${actualModel}:streamGenerateContent?key=${apiKey}`;
+    url = `https://generativelanguage.googleapis.com/v1beta/models/${actualModel}:generateContent?key=${apiKey}`;
 
     try {
         const res = await fetch(url, {
@@ -100,10 +100,7 @@ async function translate(text, from, to, options) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: {
-                type: 'Json',
-                payload: requestBody
-            }
+            body: requestBody
         });
 
         if (!res.ok) {
