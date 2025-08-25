@@ -2,14 +2,20 @@ async function translate(text, from, to, options) {
     const { config, utils } = options;
     const { tauriFetch: fetch } = utils;
     
-    // Get configuration values
+    // Get configuration values with proper defaults
     const {
         apiKey,
-        model = "gemini-2.5-flash-lite",
-        enableThinking = "false",
-        temperature = "0.3",
-        maxOutputTokens = "1024"
+        model,
+        enableThinking,
+        temperature,
+        maxOutputTokens
     } = config;
+    
+    // Apply defaults if values are missing or empty
+    const actualModel = model || "gemini-2.5-flash-lite";
+    const actualEnableThinking = enableThinking || "false";
+    const actualTemperature = temperature || "0.3";
+    const actualMaxOutputTokens = maxOutputTokens || "1024";
     
     if (!apiKey) {
         throw "API Key is required";
@@ -44,7 +50,7 @@ async function translate(text, from, to, options) {
     const toLang = getLanguageName(to);
     
     // Set thinkingBudget based on enableThinking option
-    const thinkingBudget = enableThinking === "true" ? -1 : 0;
+    const thinkingBudget = actualEnableThinking === "true" ? -1 : 0;
     
     const requestBody = {
         "contents": [{
@@ -57,8 +63,8 @@ async function translate(text, from, to, options) {
             "thinkingConfig": {
                 "thinkingBudget": thinkingBudget
             },
-            "temperature": parseFloat(temperature),
-            "maxOutputTokens": parseInt(maxOutputTokens),
+            "temperature": parseFloat(actualTemperature),
+            "maxOutputTokens": parseInt(actualMaxOutputTokens),
             "responseMimeType": "application/json",
             "responseSchema": {
                 "type": "object",
@@ -77,7 +83,7 @@ async function translate(text, from, to, options) {
         }
     };
     
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${actualModel}:generateContent?key=${apiKey}`;
     
     try {
         const res = await fetch(url, {
@@ -85,7 +91,7 @@ async function translate(text, from, to, options) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(requestBody)
+            body: requestBody
         });
         
         if (!res.ok) {

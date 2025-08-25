@@ -3,10 +3,10 @@
   "plugin_type": "translate",
   "icon": "gemini.svg",
   "display": "Gemini 2.5",
-  "homepage": "https://github.com/pot-app/pot-app-translate-plugin-gemini",
+  "homepage": "https://github.com/faker2048/pot-app-translate-plugin-gemini2.5",
   "needs": [
     { "key": "apiKey", "display": "API Key", "type": "input" },
-    { "key": "model", "display": "模型", "type": "input", "default": "gemini-2.5-flash-lite" },
+    { "key": "model", "display": "模型选择", "type": "select", "options": {"gemini-2.5-flash-lite": "gemini-2.5-flash-lite", "gemini-2.5-flash": "gemini-2.5-flash", "gemini-2.5-pro": "gemini-2.5-pro"}, "default": "gemini-2.5-flash-lite" },
     { "key": "enableThinking", "display": "启用思考模式", "type": "select", "options": {"false": "禁用", "true": "启用"}, "default": "false" },
     { "key": "temperature", "display": "温度 (0-1)", "type": "input", "default": "0.3" },
     { "key": "maxOutputTokens", "display": "最大输出 token 数", "type": "input", "default": "1024" }
