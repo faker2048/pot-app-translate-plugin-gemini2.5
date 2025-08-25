@@ -22,7 +22,16 @@ export async function translate(text, from, to, options) {
             temperature: Number(config.temperature ?? 0.3),
             maxOutputTokens: Number(config.maxOutputTokens ?? 1024),
             responseMimeType: 'application/json',
-            responseSchema: {
+            responseSchema: to === 'en' ? {
+                type: 'object',
+                properties: {
+                    "concise expression": { type: 'string' },
+                    "more natural expression": { type: 'string' },
+                    "direct translation": { type: 'string' },
+                    "reddit humble expression": { type: 'string' }
+                },
+                required: ['concise expression', 'more natural expression', 'direct translation', 'reddit humble expression']
+            } : {
                 type: 'object',
                 properties: { translation: { type: 'string', description: 'The translated text' } },
                 required: ['translation']
@@ -44,7 +53,18 @@ export async function translate(text, from, to, options) {
 
     try {
         const parsed = JSON.parse(txt);
-        return parsed.translation ?? txt;
+        if (to === 'en') {
+            // Return all four expressions formatted with line breaks
+            const expressions = [
+                `直译: ${parsed['direct translation'] || 'N/A'}`,
+                `简译: ${parsed['concise expression'] || 'N/A'}`,
+                `自然表达: ${parsed['more natural expression'] || 'N/A'}`,
+                `Reddit谦逊表达: ${parsed['reddit humble expression'] || 'N/A'}`
+            ];
+            return expressions.join('\n');
+        } else {
+            return parsed.translation ?? txt;
+        }
     } catch {
         return txt; // 若不是 JSON，就直接返回文本
     }
