@@ -100,7 +100,7 @@ async function translate(text, from, to, options) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(requestBody)  // 等价于 curl -d @request.json
+            body: { type: 'Json', payload: requestBody },    // ✅ 关键点
         });
 
         if (!res.ok) {
