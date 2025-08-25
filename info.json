@@ -5,11 +5,11 @@
   "display": "Gemini 2.5",
   "homepage": "https://github.com/pot-app/pot-app-translate-plugin-gemini",
   "needs": [
-    { "key": "apiKey", "display": "API Key" },
-    { "key": "model", "display": "模型", "default": "gemini-2.5-flash-lite" },
-    { "key": "enableThinking", "display": "启用思考模式", "type": "select", "options": [{"value": "true", "label": "启用"}, {"value": "false", "label": "禁用"}], "default": "false" },
-    { "key": "temperature", "display": "温度 (0-1)", "default": "0.3" },
-    { "key": "maxOutputTokens", "display": "最大输出 token 数", "default": "1024" }
+    { "key": "apiKey", "display": "API Key", "type": "input" },
+    { "key": "model", "display": "模型", "type": "input", "default": "gemini-2.5-flash-lite" },
+    { "key": "enableThinking", "display": "启用思考模式", "type": "select", "options": {"false": "禁用", "true": "启用"}, "default": "false" },
+    { "key": "temperature", "display": "温度 (0-1)", "type": "input", "default": "0.3" },
+    { "key": "maxOutputTokens", "display": "最大输出 token 数", "type": "input", "default": "1024" }
   ],
   "language": {
     "auto": "auto",
