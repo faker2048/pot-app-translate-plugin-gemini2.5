@@ -97,19 +97,17 @@ async function translate(text, from, to, options) {
     try {
         const res = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' }, // 可留可去
             body: { type: 'Json', payload: requestBody },    // ✅ 关键点
         });
 
         if (!res.ok) {
-            const text = await res.text();
-            throw new Error(`HTTP ${res.status} - ${res.statusText}\n${text}`);
+            let detail = `HTTP ${res.status}${res.statusText ? ' - ' + res.statusText : ''}`;
+            if (res.data) detail += `\nResponse: ${JSON.stringify(res.data)}`;
+            throw new Error(`API请求失败: ${detail}`);
         }
 
-        const result = await res.json();  // 等价于 curl 返回的 JSON
-
+        const result = res.data; // ✅ Tauri 在 data 字段里
 
         if (!result || !result.candidates || result.candidates.length === 0) {
             throw new Error(`API响应异常: ${JSON.stringify(result)}`);
