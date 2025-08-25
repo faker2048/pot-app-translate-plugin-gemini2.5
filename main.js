@@ -1,6 +1,6 @@
 async function translate(text, from, to, options) {
     let config, fetch;
-    
+
     try {
         const { config: cfg, utils } = options;
         const { tauriFetch } = utils;
@@ -11,14 +11,14 @@ async function translate(text, from, to, options) {
     }
 
     let apiKey, actualModel, actualEnableThinking, actualTemperature, actualMaxOutputTokens;
-    
+
     try {
         apiKey = config.apiKey;
         actualModel = config.model || "gemini-2.5-flash-lite";
         actualEnableThinking = config.enableThinking || "false";
         actualTemperature = config.temperature || "0.3";
         actualMaxOutputTokens = config.maxOutputTokens || "1024";
-        
+
         if (!apiKey || apiKey.trim() === '') {
             throw `API Key is required. 当前配置: ${JSON.stringify(config)}`;
         }
@@ -31,7 +31,7 @@ async function translate(text, from, to, options) {
         const getLanguageName = (code) => {
             const langMap = {
                 'en': 'English',
-                'zh': 'Chinese', 
+                'zh': 'Chinese',
                 'zh_cn': 'Chinese Simplified',
                 'zh_tw': 'Chinese Traditional',
                 'ja': 'Japanese',
@@ -61,7 +61,7 @@ async function translate(text, from, to, options) {
     let requestBody, url;
     try {
         const thinkingBudget = actualEnableThinking === "true" ? -1 : 0;
-        
+
         requestBody = {
             "contents": [{
                 "role": "user",
@@ -97,10 +97,8 @@ async function translate(text, from, to, options) {
     try {
         const res = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: requestBody
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody), // 这里要 stringify
         });
 
         if (!res.ok) {
@@ -111,8 +109,8 @@ async function translate(text, from, to, options) {
             throw new Error(`API请求失败: ${errorDetail}`);
         }
 
-        const result = res.data;
-        
+        const result = await res.json();
+
         if (!result || !result.candidates || result.candidates.length === 0) {
             throw new Error(`API响应异常: ${JSON.stringify(result)}`);
         }
